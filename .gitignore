@@ -1,0 +1,8 @@
+.Trashes
+.env
+.fseventsd
+.metadata_never_index
+.vscode
+System Volume Information
+boot_out.txt
+secrets.py
