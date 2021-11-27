@@ -379,12 +379,12 @@ def get_data(request):
         })
     )
 
-remaining_time = 0
+time_until_display_refresh = 0
 
 @ampule.route("/refresh")
 def force_refresh(request):
     global remaining_time
-    remaining_time = 0
+    time_until_display_refresh = 0
     return (200, {}, 'Requested refresh')
 
 
@@ -414,69 +414,81 @@ def get_system(request):
 def is_number(value):
     return isinstance(value, (float, int))
 
+def get_display_data():
+    # PM AQI
+    pm25_aqi = ""
+    try:
+        aqdata = pm25_sensor.read()
+        pm25_aqi = calculate_pm25_aqi(aqdata["pm25 env"])
+    except:
+        print("Failed to read PM 2.5 data")
+    pm25_aqi = f"{pm25_aqi:d}" if is_number(pm25_aqi) else "(?)"
+    print(f'PM 2.5 AQI = {pm25_aqi}')
+
+    # TVOC AQI
+    (tvoc_aqi, gas_score, hum_score) = ("", "", "")
+    try:
+        (tvoc_aqi, gas_score, hum_score) = calculate_tvoc_aqi(gas_baseline)
+    except:
+        print("Failed to calculate TVOC AQI")
+    tvoc_aqi = f"{tvoc_aqi:4.0f}" if is_number(tvoc_aqi) else "(?)"
+    print(f'TVOC AQI = {tvoc_aqi}')
+
+    # Temperature
+    temperature = ""
+    try:
+        temperature = tmp117_sensor.temperature
+    except:
+        print("Failed to read temperature")
+    temperature = f"{temperature:4.1f}°" if is_number(temperature) else "(?)"
+    print(f'Temperature = {temperature}')
+
+    # Humidity
+    humidity = ""
+    try:
+        humidity = bme680_sensor.humidity
+    except:
+        print("Failed to read humidity")
+    humidity = f"{humidity:4.1f}%" if is_number(humidity) else "(?)"
+    print(f'Humidity = {humidity}')
+
+    # Pressure
+    pressure = ""
+    try:
+        pressure = bme680_sensor.pressure
+    except:
+        print("Failed to read temperature")
+    pressure = f"{pressure:4.0f} hPa" if is_number(pressure) else "(?)"
+    print(f'Pressure = {pressure}')
+
+    return (pm25_aqi, tvoc_aqi, temperature, humidity, pressure)
+
+def update_mqtt():
+    True
+
 
 print("Running loop")
 while True:
-    remaining_time -= LOOP_CYCLE_RATE
+    time_until_display_refresh -= LOOP_CYCLE_RATE
 
+    # Check for any pending http requests, with an intentionally short timeout
+    # so that we can continue the loop
     try:
         ampule.listen(socket)
     except:
         # Timeout
         True
 
-    if remaining_time <= 0 or magtag.peripherals.button_a_pressed:
-        remaining_time = DISPLAY_REFRESH_RATE
+    # Every DISPLAY_REFRESH_RATE or whenever button A is pressed, refresh the
+    # MagTag display
+    if time_until_display_refresh <= 0 or magtag.peripherals.button_a_pressed:
+        time_until_display_refresh = DISPLAY_REFRESH_RATE
 
-        # PM AQI
-        pm25_aqi = ""
-        try:
-            aqdata = pm25_sensor.read()
-            pm25_aqi = calculate_pm25_aqi(aqdata["pm25 env"])
-        except:
-            print("Failed to read PM 2.5 data")
-        pm25_aqi = f"{pm25_aqi:d}" if is_number(pm25_aqi) else "(?)"
-        print(f'PM 2.5 AQI = {pm25_aqi}')
+        (pm25_aqi, tvoc_aqi, temperature, humidity, pressure) = get_display_data()
         pm25_label.text = pm25_aqi
-
-        # TVOC AQI
-        (tvoc_aqi, gas_score, hum_score) = ("", "", "")
-        try:
-            (tvoc_aqi, gas_score, hum_score) = calculate_tvoc_aqi(gas_baseline)
-        except:
-            print("Failed to calculate TVOC AQI")
-        tvoc_aqi = f"{tvoc_aqi:4.0f}" if is_number(tvoc_aqi) else "(?)"
-        print(f'TVOC AQI = {tvoc_aqi}')
         tvoc_label.text = tvoc_aqi
-
-        # Temperature
-        temperature = ""
-        try:
-            temperature = tmp117_sensor.temperature
-        except:
-            print("Failed to read temperature")
-        temperature = f"{temperature:4.1f}°" if is_number(temperature) else "(?)"
-        print(f'Temperature = {temperature}')
         temperature_label.text = temperature
-        
-        # Humidity
-        humidity = ""
-        try:
-            humidity = bme680_sensor.humidity
-        except:
-            print("Failed to read humidity")
-        humidity = f"{humidity:4.1f}%" if is_number(humidity) else "(?)"
-        print(f'Humidity = {humidity}')
         humidity_label.text = humidity
-
-        # Pressure
-        pressure = ""
-        try:
-            pressure = bme680_sensor.pressure
-        except:
-            print("Failed to read temperature")
-        pressure = f"{pressure:4.0f} hPa" if is_number(pressure) else "(?)"
-        print(f'Pressure = {pressure}')
         pressure_label.text = pressure
 
         # Update display        
