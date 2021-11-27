@@ -5,17 +5,15 @@ import wifi
 import ampule
 import board
 import busio
-import displayio
 import adafruit_bme680
 import adafruit_tmp117
 import socketpool
 
-from adafruit_bitmap_font import bitmap_font
-from adafruit_display_shapes.rect import Rect
-from adafruit_display_text import label
 from adafruit_magtag.magtag import MagTag
 from adafruit_pm25.i2c import PM25_I2C
 from digitalio import DigitalInOut, Direction, Pull
+
+from src.Display import Display
 
 
 # ----- CONFIGURATION VARIABLES -----
@@ -25,12 +23,6 @@ LOOP_CYCLE_RATE = 1
 
 # Display
 DISPLAY_REFRESH_RATE = 60
-BG_COLOR1 = 0xFFFFFF
-BG_COLOR2 = 0xBBBBBB
-BG_COLOR3 = 0x444444
-TEXT_COLOR1 = 0x000000
-TEXT_COLOR2 = 0xFFFFFF
-SECOND_ROW_BASELINE = 106
 
 # Set the humidity baseline to 40%, an optimal indoor humidity
 HUMIDITY_BASELINE = 40.0
@@ -105,89 +97,7 @@ bme680_sensor.filter_size = 3
 # ----- DISPLAY SETUP -----
 
 print('Setting up display')
-display = board.DISPLAY
-
-group = displayio.Group()  # max_size=20
-rect1 = Rect(0, 0, 199, 90, fill=BG_COLOR1)
-rect2 = Rect(200, 0, 296, 90, fill=BG_COLOR2)
-rect3 = Rect(0, 91, 296, 128, fill=BG_COLOR3)
-
-# Create fonts
-print("Loading fonts")
-big_font = bitmap_font.load_font("/fonts/Exo-Bold-42.bdf")
-medium_font = bitmap_font.load_font("/fonts/Exo-SemiBold-18.bdf")
-small_font = bitmap_font.load_font("/fonts/Exo-SemiBold-12.bdf")
-tiny_font = bitmap_font.load_font("/fonts/Exo-SemiBold-6.bdf")
-
-# Bitmaps
-print("Loading bitmaps")
-thermometer_bitmap = displayio.OnDiskBitmap(open("/images/thermometer.bmp", "rb"))
-temperature_tile = displayio.TileGrid(
-    thermometer_bitmap,
-    pixel_shader=getattr(thermometer_bitmap, 'pixel_shader',
-                         displayio.ColorConverter()),
-    x=4,
-    y=18
-)
-humidity_bitmap = displayio.OnDiskBitmap(open("/images/water.bmp", "rb"))
-humidity_tile = displayio.TileGrid(
-    humidity_bitmap,
-    pixel_shader=getattr(humidity_bitmap, 'pixel_shader',
-                         displayio.ColorConverter()),
-    x=4,
-    y=SECOND_ROW_BASELINE - 8
-)
-pressure_bitmap = displayio.OnDiskBitmap(open("/images/cloud.bmp", "rb"))
-pressure_tile = displayio.TileGrid(
-    pressure_bitmap,
-    pixel_shader=getattr(pressure_bitmap, 'pixel_shader',
-                         displayio.ColorConverter()),
-    x=140,
-    y=SECOND_ROW_BASELINE - 8
-)
-
-# Create sensor value labels
-print('Creating UI elements')
-temperature_label = label.Label(
-    big_font, text="012.45°", color=TEXT_COLOR1, x=28, y=44, background_color=BG_COLOR1)
-temperature_label.anchor_point = (0.5, 0.5)
-temperature_label.anchored_position = (100, 44)
-humidity_label = label.Label(medium_font, text="012.34%", color=TEXT_COLOR2,
-                             x=30, y=SECOND_ROW_BASELINE, background_color=BG_COLOR3)
-pressure_label = label.Label(medium_font, text="1234hPa", color=TEXT_COLOR2,
-                             x=170, y=SECOND_ROW_BASELINE, background_color=BG_COLOR3)
-tvoc_text = label.Label(tiny_font, text="TVOC AQI",
-                        color=TEXT_COLOR1, x=218, y=8, background_color=BG_COLOR2)
-tvoc_text.anchor_point = (0.5, 0)
-tvoc_text.anchored_position = (245, 8)
-tvoc_label = label.Label(small_font, text="1234",
-                         color=TEXT_COLOR1, x=218, y=20, background_color=BG_COLOR2)
-tvoc_label.anchor_point = (0.5, 0)
-tvoc_label.anchored_position = (245, 20)
-pm25_text = label.Label(tiny_font, text="PM2.5 AQI",
-                        color=TEXT_COLOR1, x=218, y=8, background_color=BG_COLOR2)
-pm25_text.anchor_point = (0.5, 0)
-pm25_text.anchored_position = (245, 50)
-pm25_label = label.Label(small_font, text="1234",
-                         color=TEXT_COLOR1, x=218, y=70, background_color=BG_COLOR2)
-pm25_label.anchor_point = (0.5, 0)
-pm25_label.anchored_position = (245, 62)
-
-# Compose group
-group.append(rect1)
-group.append(rect2)
-group.append(rect3)
-group.append(temperature_label)
-group.append(humidity_label)
-group.append(pressure_label)
-group.append(tvoc_text)
-group.append(tvoc_label)
-group.append(pm25_text)
-group.append(pm25_label)
-group.append(temperature_tile)
-group.append(humidity_tile)
-group.append(pressure_tile)
-
+display = Display()
 
 # ----- NEOPIXELS SETUP -----
 
@@ -463,9 +373,6 @@ def get_display_data():
 
     return (pm25_aqi, tvoc_aqi, temperature, humidity, pressure)
 
-def update_mqtt():
-    True
-
 
 print("Running loop")
 while True:
@@ -485,14 +392,11 @@ while True:
         time_until_display_refresh = DISPLAY_REFRESH_RATE
 
         (pm25_aqi, tvoc_aqi, temperature, humidity, pressure) = get_display_data()
-        pm25_label.text = pm25_aqi
-        tvoc_label.text = tvoc_aqi
-        temperature_label.text = temperature
-        humidity_label.text = humidity
-        pressure_label.text = pressure
-
-        # Update display        
-        display.show(group)
+        display.set_pm25_aqi(pm25_aqi)
+        display.set_tvoc_aqi(tvoc_aqi)
+        display.set_temperature(temperature)
+        display.set_humidity(humidity)
+        display.set_pressure(pressure)
         display.refresh()
         print('Refreshed display')
 
