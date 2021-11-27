@@ -6,14 +6,14 @@ class Utils:
 
     def is_number(value):
         return isinstance(value, (float, int))
-    
+
     def get_secrets():
         try:
             from secrets import secrets
         except ImportError:
             print("Failed to import secrets.py")
             raise
-        
+
         return secrets
 
     def connect_to_wifi(ssid, password):
@@ -27,7 +27,7 @@ class Utils:
 
     def get_socket(interface, port):
         pool = socketpool.SocketPool(wifi.radio)
-        
+
         socket = pool.socket()
         socket.bind([interface, port])
         socket.settimeout(1)

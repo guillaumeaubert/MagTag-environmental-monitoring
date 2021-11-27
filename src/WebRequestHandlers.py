@@ -4,6 +4,7 @@ import wifi
 from src.ParticulateMatter import ParticulateMatter
 from src.TVOC import TVOC
 
+
 class WebRequestHandlers:
 
     def get_data(pm25_sensor, bme680_sensor, bme680_temperature_offset, tmp117_sensor, tvoc, magtag):
@@ -73,7 +74,7 @@ class WebRequestHandlers:
                 }
             })
         )
-    
+
     def get_system(magtag, secrets):
         return (
             200,
@@ -92,4 +93,4 @@ class WebRequestHandlers:
                 "battery": magtag.peripherals.battery,
                 "light": magtag.peripherals.light,
             })
-        )  
+        )
