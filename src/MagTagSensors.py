@@ -73,6 +73,7 @@ class MagTagSensors:
         def get_system(request):
             return WebRequestHandlers.get_system(magtag, secrets)
 
+        # Loop to process requests and perform actions at specific intervals
         print("Running loop")
         time_until_display_refresh = 0
         while True:

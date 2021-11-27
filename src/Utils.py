@@ -27,7 +27,10 @@ class Utils:
 
     def get_socket(interface, port):
         pool = socketpool.SocketPool(wifi.radio)
+        
         socket = pool.socket()
         socket.bind([interface, port])
         socket.settimeout(1)
         socket.listen(1)
+
+        return socket

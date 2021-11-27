@@ -5,6 +5,7 @@ from src.ParticulateMatter import ParticulateMatter
 from src.TVOC import TVOC
 
 class WebRequestHandlers:
+
     def get_data(pm25_sensor, bme680_sensor, bme680_temperature_offset, tmp117_sensor, tvoc, magtag):
         try:
             aqdata = pm25_sensor.read()
