@@ -15,6 +15,7 @@ from digitalio import DigitalInOut, Direction, Pull
 
 from src.Display import Display
 from src.ParticulateMatter import ParticulateMatter
+from src.TVOC import TVOC
 
 
 # ----- CONFIGURATION VARIABLES -----
@@ -25,16 +26,6 @@ LOOP_CYCLE_RATE = 1
 # Display
 DISPLAY_REFRESH_RATE = 60
 
-# Set the humidity baseline to 40%, an optimal indoor humidity
-HUMIDITY_BASELINE = 40.0
-
-# This sets the balance between humidity and gas reading in the
-# calculation of air_quality_score (25:75, humidity:gas)
-TVOC_AQI_HUMIDITY_WEIGHT = 0.25
-
-# Burn-in time for the BME680
-BURN_IN_TIME = 0  # 300
-
 # Temperature offset for the BME680 based on manual calibration
 BME680_TEMPERATURE_OFFSET = 0.0
 
@@ -44,6 +35,7 @@ TMP117_TEMPERATURE_OFFSET = 0.0
 # HTTP API
 HTTP_INTERFACE = '0.0.0.0'
 HTTP_PORT = 80
+
 
 # ----- SIGNAL START VIA LED -----
 
@@ -93,6 +85,7 @@ bme680_sensor.temperature_oversample = 8
 bme680_sensor.humidity_oversample = 2
 bme680_sensor.pressure_oversample = 4
 bme680_sensor.filter_size = 3
+tvoc = TVOC(bme680_sensor)
 
 
 # ----- DISPLAY SETUP -----
@@ -107,66 +100,6 @@ magtag.peripherals.neopixel_disable = False
 #magtag.peripherals.neopixels.fill((255, 255, 0))
 
 
-# ----- BME680 SENSOR -----
-
-def get_gas_baseline():
-    start_time = time.time()
-    curr_time = time.time()
-
-    burn_in_data = []
-
-    print(f'Collecting gas resistance burn-in data for {BURN_IN_TIME} seconds')
-    while curr_time - start_time < BURN_IN_TIME:
-        curr_time = time.time()
-        gas = bme680_sensor.gas
-        burn_in_data.append(gas)
-        print(f'Gas resistance = {gas} ohms')
-        time.sleep(1)
-
-    gas_baseline = sum(burn_in_data[-50:]) / 50.0
-
-    print(f'Gas baseline = {gas_baseline} ohms; humidity baseline = {HUMIDITY_BASELINE:.2f} %RH')
-
-    return gas_baseline
-
-
-gas_baseline = get_gas_baseline()
-
-
-def calculate_tvoc_aqi(gas_baseline):
-    gas = bme680_sensor.gas
-    gas_offset = gas_baseline - gas
-
-    hum = bme680_sensor.humidity
-    hum_offset = hum - HUMIDITY_BASELINE
-
-    # Calculate hum_score as the distance from the hum_baseline.
-    if hum_offset > 0:
-        hum_score = (100 - HUMIDITY_BASELINE - hum_offset)
-        hum_score /= (100 - HUMIDITY_BASELINE)
-        hum_score *= (TVOC_AQI_HUMIDITY_WEIGHT * 100)
-
-    else:
-        hum_score = (HUMIDITY_BASELINE + hum_offset)
-        hum_score /= HUMIDITY_BASELINE
-        hum_score *= (TVOC_AQI_HUMIDITY_WEIGHT * 100)
-
-    # Calculate gas_score as the distance from the gas_baseline.
-    if gas_offset > 0:
-        gas_score = (gas / gas_baseline)
-        gas_score *= (100 - (TVOC_AQI_HUMIDITY_WEIGHT * 100))
-
-    else:
-        gas_score = 100 - (TVOC_AQI_HUMIDITY_WEIGHT * 100)
-
-    # Calculate air_quality_score.
-    air_quality_score = hum_score + gas_score
-
-    print(f'Gas: {gas:.2f} ohms, humidity: {hum:.2f} %RH, air quality: {air_quality_score:.2f}')
-
-    return (air_quality_score, gas_score, hum_score)
-
-
 # ----- WEB REQUESTS HANDLING -----
 
 @ampule.route("/data")
@@ -178,7 +111,7 @@ def get_data(request):
     except:
         aqdata = {}
 
-    (tvoc_aqi, gas_aqi_score, humidity_aqi_score) = calculate_tvoc_aqi(gas_baseline)
+    (tvoc_aqi, gas_aqi_score, humidity_aqi_score) = tvoc.calculate_tvoc_aqi()
 
     return (
         200,
@@ -197,9 +130,9 @@ def get_data(request):
                     "TVOC_AQI": tvoc_aqi,
                     "gas_score": gas_aqi_score,
                     "humidity_score": humidity_aqi_score,
-                    "humidity_baseline": HUMIDITY_BASELINE,
-                    "humidity_weight": TVOC_AQI_HUMIDITY_WEIGHT,
-                    "gas_weight": 1 - TVOC_AQI_HUMIDITY_WEIGHT
+                    "humidity_baseline": TVOC.HUMIDITY_BASELINE,
+                    "humidity_weight": TVOC.TVOC_AQI_HUMIDITY_WEIGHT,
+                    "gas_weight": 1 - TVOC.TVOC_AQI_HUMIDITY_WEIGHT
                 }
             },
             "TMP117": {
@@ -288,7 +221,7 @@ def get_display_data():
     # TVOC AQI
     (tvoc_aqi, gas_score, hum_score) = ("", "", "")
     try:
-        (tvoc_aqi, gas_score, hum_score) = calculate_tvoc_aqi(gas_baseline)
+        (tvoc_aqi, gas_score, hum_score) = tvoc.calculate_tvoc_aqi()
     except:
         print("Failed to calculate TVOC AQI")
     tvoc_aqi = f"{tvoc_aqi:4.0f}" if is_number(tvoc_aqi) else "(?)"
