@@ -6,8 +6,8 @@
 class ParticulateMatter:
 
     def get_linear_value(aqi_high, aqi_low, concentration_high, concentration_low, concentration):
-        aqi = (concentration - concentration_low) / (concentration_high -
-                                                     concentration_low) * (aqi_high - aqi_low) + aqi_low
+        aqi = (((concentration - concentration_low) / (concentration_high - concentration_low))
+               * (aqi_high - aqi_low) + aqi_low)
         return round(aqi)
 
     def calculate_pm25_aqi(concentration):
