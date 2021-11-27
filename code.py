@@ -88,18 +88,6 @@ bme680_sensor.filter_size = 3
 tvoc = TVOC(bme680_sensor)
 
 
-# ----- DISPLAY SETUP -----
-
-print('Setting up display')
-display = Display()
-
-# ----- NEOPIXELS SETUP -----
-
-magtag = MagTag()
-magtag.peripherals.neopixel_disable = False
-#magtag.peripherals.neopixels.fill((255, 255, 0))
-
-
 # ----- WEB REQUESTS HANDLING -----
 
 @ampule.route("/data")
@@ -172,15 +160,6 @@ def get_data(request):
         })
     )
 
-time_until_display_refresh = 0
-
-@ampule.route("/refresh")
-def force_refresh(request):
-    global remaining_time
-    time_until_display_refresh = 0
-    return (200, {}, 'Requested refresh')
-
-
 @ampule.route("/system")
 def get_system(request):
     return (
@@ -201,6 +180,7 @@ def get_system(request):
             "light": magtag.peripherals.light,
         })
     )  
+
 
 # ----- MAIN -----
 
@@ -257,7 +237,13 @@ def get_display_data():
     return (pm25_aqi, tvoc_aqi, temperature, humidity, pressure)
 
 
+print('Setting up display')
+display = Display()
+magtag = MagTag()
+magtag.peripherals.neopixel_disable = False
+
 print("Running loop")
+time_until_display_refresh = 0
 while True:
     time_until_display_refresh -= LOOP_CYCLE_RATE
 
