@@ -47,10 +47,10 @@ class Display:
             x=4,
             y=Display.SECOND_ROW_BASELINE - 8
         )
-        pressure_bitmap = displayio.OnDiskBitmap(open("/images/cloud.bmp", "rb"))
-        pressure_tile = displayio.TileGrid(
-            pressure_bitmap,
-            pixel_shader=getattr(pressure_bitmap, 'pixel_shader', displayio.ColorConverter()),
+        co2_bitmap = displayio.OnDiskBitmap(open("/images/cloud.bmp", "rb"))
+        co2_tile = displayio.TileGrid(
+            co2_bitmap,
+            pixel_shader=getattr(co2_bitmap, 'pixel_shader', displayio.ColorConverter()),
             x=140,
             y=Display.SECOND_ROW_BASELINE - 8
         )
@@ -75,9 +75,9 @@ class Display:
             y=Display.SECOND_ROW_BASELINE,
             background_color=Display.BG_COLOR3
         )
-        self.pressure_label = label.Label(
+        self.co2_label = label.Label(
             medium_font,
-            text="1234hPa",
+            text="123 ppm",
             color=Display.TEXT_COLOR2,
             x=170,
             y=Display.SECOND_ROW_BASELINE,
@@ -130,14 +130,14 @@ class Display:
         self.group.append(rect3)
         self.group.append(self.temperature_label)
         self.group.append(self.humidity_label)
-        self.group.append(self.pressure_label)
+        self.group.append(self.co2_label)
         self.group.append(tvoc_text)
         self.group.append(self.tvoc_label)
         self.group.append(pm25_text)
         self.group.append(self.pm25_label)
         self.group.append(temperature_tile)
         self.group.append(humidity_tile)
-        self.group.append(pressure_tile)
+        self.group.append(co2_tile)
 
     def refresh(self):
         self.display.show(self.group)
@@ -149,11 +149,11 @@ class Display:
     def set_humidity(self, value):
         self.humidity_label.text = value
 
-    def set_pressure(self, value):
-        self.pressure_label.text = value
-
     def set_tvoc_aqi(self, value):
         self.tvoc_label.text = value
 
     def set_pm25_aqi(self, value):
         self.pm25_label.text = value
+
+    def set_co2(self, value):
+        self.co2_label.text = value

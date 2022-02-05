@@ -7,13 +7,26 @@ from src.TVOC import TVOC
 
 class WebRequestHandlers:
 
-    def get_data(pm25_sensor, bme680_sensor, bme680_temperature_offset, tmp117_sensor, tvoc, magtag):
+    def get_data(pm25_sensor, bme680_sensor, bme680_temperature_offset, tmp117_sensor, scd40_sensor, tvoc, magtag):
         try:
             aqdata = pm25_sensor.read()
-        except:
+        except Exception as e:
+            print(f'Failed to read data from PM sensor: {repr(e)}')
             aqdata = {}
 
         (tvoc_aqi, gas_aqi_score, humidity_aqi_score) = tvoc.calculate_tvoc_aqi()
+
+        try:
+            data_ready = scd40_sensor.data_ready
+            scd40_data = {
+                "data_ready": data_ready,
+                "temperature": scd40_sensor.temperature,
+                "relative_humidity": scd40_sensor.relative_humidity,
+                "co2": scd40_sensor.CO2,
+            }
+        except Exception as e:
+            print(f'Failed to read data from SCD40: {repr(e)}')
+            scd40_data = {}
 
         return (
             200,
@@ -69,6 +82,7 @@ class WebRequestHandlers:
                         "PM_10": ParticulateMatter.calculate_pm10_aqi(aqdata["pm100 env"])
                     }
                 },
+                "SCD40": scd40_data,
                 "magtag": {
                     "light": magtag.peripherals.light,
                 }

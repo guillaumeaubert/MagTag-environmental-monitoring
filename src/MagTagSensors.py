@@ -4,6 +4,7 @@ import ampule
 import board
 import busio
 import adafruit_bme680
+import adafruit_scd4x
 import adafruit_tmp117
 
 from adafruit_magtag.magtag import MagTag
@@ -14,7 +15,6 @@ from src.ParticulateMatter import ParticulateMatter
 from src.TVOC import TVOC
 from src.Utils import Utils
 from src.WebRequestHandlers import WebRequestHandlers
-
 
 class MagTagSensors:
 
@@ -58,6 +58,11 @@ class MagTagSensors:
         self.bme680_sensor.filter_size = 3
         self.tvoc = TVOC(self.bme680_sensor)
 
+        self.scd40_sensor = adafruit_scd4x.SCD4X(i2c)
+        print("Connected to SCD40:", [hex(i) for i in self.scd40_sensor.serial_number])
+        self.scd40_sensor.start_periodic_measurement()
+        #SCD40Wrapper(i2c)
+
         # Set up display
         print('Setting up display')
         display = Display()
@@ -67,7 +72,7 @@ class MagTagSensors:
         # Define handlers for web requests
         @ampule.route("/data")
         def get_data(request):
-            return WebRequestHandlers.get_data(self.pm25_sensor, self.bme680_sensor, MagTagSensors.BME680_TEMPERATURE_OFFSET, self.tmp117_sensor, self.tvoc, magtag)
+            return WebRequestHandlers.get_data(self.pm25_sensor, self.bme680_sensor, MagTagSensors.BME680_TEMPERATURE_OFFSET, self.tmp117_sensor, self.scd40_sensor, self.tvoc, magtag)
 
         @ampule.route("/system")
         def get_system(request):
@@ -92,12 +97,12 @@ class MagTagSensors:
             if time_until_display_refresh <= 0 or magtag.peripherals.button_a_pressed:
                 time_until_display_refresh = MagTagSensors.DISPLAY_REFRESH_RATE
 
-                (pm25_aqi, tvoc_aqi, temperature, humidity, pressure) = self.get_display_data()
+                (pm25_aqi, tvoc_aqi, temperature, humidity, co2) = self.get_display_data()
                 display.set_pm25_aqi(pm25_aqi)
                 display.set_tvoc_aqi(tvoc_aqi)
                 display.set_temperature(temperature)
                 display.set_humidity(humidity)
-                display.set_pressure(pressure)
+                display.set_co2(co2)
                 display.refresh()
                 print('Refreshed display')
 
@@ -129,7 +134,7 @@ class MagTagSensors:
             temperature = self.tmp117_sensor.temperature
         except:
             print("Failed to read temperature")
-        temperature = f"{temperature:4.1f}°" if Utils.is_number(temperature) else "(?)"
+        temperature = f"{temperature:4.1f}°" if Utils.is_number(temperature) else "??.?°"
         print(f'Temperature = {temperature}')
 
         # Humidity
@@ -138,16 +143,17 @@ class MagTagSensors:
             humidity = self.bme680_sensor.humidity
         except:
             print("Failed to read humidity")
-        humidity = f"{humidity:4.1f}%" if Utils.is_number(humidity) else "(?)"
+        humidity = f"{humidity:4.1f}%" if Utils.is_number(humidity) else "??.?%"
         print(f'Humidity = {humidity}')
 
-        # Pressure
-        pressure = ""
+        # CO2
+        co2 = ""
         try:
-            pressure = self.bme680_sensor.pressure
+            self.scd40_sensor.data_ready
+            co2 = self.scd40_sensor.CO2
         except:
-            print("Failed to read temperature")
-        pressure = f"{pressure:4.0f} hPa" if Utils.is_number(pressure) else "(?)"
-        print(f'Pressure = {pressure}')
+            print("Failed to read CO2")
+        co2 = f"{co2:4.0f} ppm" if Utils.is_number(co2) and co2 > 0 else "??? ppm"
+        print(f'CO2 = {co2}')
 
-        return (pm25_aqi, tvoc_aqi, temperature, humidity, pressure)
+        return (pm25_aqi, tvoc_aqi, temperature, humidity, co2)
