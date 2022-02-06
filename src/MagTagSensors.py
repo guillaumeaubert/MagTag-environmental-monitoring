@@ -72,7 +72,16 @@ class MagTagSensors:
         # Define handlers for web requests
         @ampule.route("/data")
         def get_data(request):
-            return WebRequestHandlers.get_data(self.pm25_sensor, self.bme680_sensor, MagTagSensors.BME680_TEMPERATURE_OFFSET, self.tmp117_sensor, self.scd40_sensor, self.tvoc, magtag)
+            return WebRequestHandlers.get_data(
+                Utils.get_all_sensor_data(
+                    self.pm25_sensor,
+                    self.bme680_sensor,
+                    MagTagSensors.BME680_TEMPERATURE_OFFSET,
+                    self.tmp117_sensor,
+                    self.scd40_sensor,
+                    self.tvoc, magtag,
+                )
+            )
 
         @ampule.route("/system")
         def get_system(request):
