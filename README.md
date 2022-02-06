@@ -17,3 +17,5 @@
     * [Adafruit](https://www.adafruit.com/product/3660)
     * [CircuitPython documentation](https://circuitpython.readthedocs.io/projects/bme680/en/latest/index.html)
     * [AQI calculation](https://github.com/pimoroni/bme680-python/blob/master/examples/indoor-air-quality.py)
+* MQTT
+    * [MiniMQTT](https://github.com/adafruit/Adafruit_CircuitPython_MiniMQTT)

@@ -1,4 +1,6 @@
+import json
 import time
+from adafruit_minimqtt.adafruit_minimqtt import MQTT_TOPIC_LENGTH_LIMIT
 
 import ampule
 import board
@@ -11,6 +13,7 @@ from adafruit_magtag.magtag import MagTag
 from adafruit_pm25.i2c import PM25_I2C
 
 from src.Display import Display
+from src.MQTTHandler import MQTTHandler
 from src.ParticulateMatter import ParticulateMatter
 from src.TVOC import TVOC
 from src.Utils import Utils
@@ -22,7 +25,7 @@ class MagTagSensors:
     LOOP_CYCLE_RATE = 1
 
     # Display
-    DISPLAY_REFRESH_RATE = 60
+    DISPLAY_REFRESH_RATE = 5*60
 
     # Temperature offset for the BME680 based on manual calibration
     BME680_TEMPERATURE_OFFSET = 0.0
@@ -33,6 +36,10 @@ class MagTagSensors:
     # HTTP API
     HTTP_INTERFACE = '0.0.0.0'
     HTTP_PORT = 80
+
+    # MQTT
+    MQTT_REFRESH_RATE = 30
+    MQTT_TOPIC = 'magtag_sensors'
 
     def __init__(self):
         # Connect to WiFi
@@ -61,7 +68,6 @@ class MagTagSensors:
         self.scd40_sensor = adafruit_scd4x.SCD4X(i2c)
         print("Connected to SCD40:", [hex(i) for i in self.scd40_sensor.serial_number])
         self.scd40_sensor.start_periodic_measurement()
-        #SCD40Wrapper(i2c)
 
         # Set up display
         print('Setting up display')
@@ -87,11 +93,21 @@ class MagTagSensors:
         def get_system(request):
             return WebRequestHandlers.get_system(magtag, secrets)
 
+        # Set up MQTT client
+        mqtt_client = MQTTHandler(
+            secrets['mqtt']['broker'],
+            secrets['mqtt']['port'],
+            secrets['mqtt']['username'],
+            secrets['mqtt']['password'],
+        ).get_client()
+
         # Loop to process requests and perform actions at specific intervals
         print("Running loop")
+        time_until_mqtt_refresh = 0
         time_until_display_refresh = 0
         while True:
             time_until_display_refresh -= MagTagSensors.LOOP_CYCLE_RATE
+            time_until_mqtt_refresh -= MagTagSensors.LOOP_CYCLE_RATE
 
             # Check for any pending http requests, with an intentionally short timeout
             # so that we can continue the loop
@@ -100,6 +116,30 @@ class MagTagSensors:
             except:
                 # Timeout
                 True
+
+            # Every MQTT_REFRESH_RATE, send an update to the broker
+            if time_until_mqtt_refresh <= 0:
+                time_until_mqtt_refresh = MagTagSensors.MQTT_REFRESH_RATE
+                if (mqtt_client.is_connected() is False):
+                    try:
+                        mqtt_client.connect()
+                    except:
+                        print('Failed to reconnect to MQTT broker')
+
+                try:
+                    mqtt_client.publish(MagTagSensors.MQTT_TOPIC, json.dumps(
+                        Utils.get_all_sensor_data(
+                            self.pm25_sensor,
+                            self.bme680_sensor,
+                            MagTagSensors.BME680_TEMPERATURE_OFFSET,
+                            self.tmp117_sensor,
+                            self.scd40_sensor,
+                            self.tvoc, magtag,
+                        )
+                    ))
+                    print('Published to MQTT broker')
+                except Exception as exception:
+                    print(f'Failed to publish to MQTT broker: {exception}')
 
             # Every DISPLAY_REFRESH_RATE or whenever button A is pressed, refresh the
             # MagTag display
