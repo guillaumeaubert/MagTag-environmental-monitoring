@@ -5,7 +5,7 @@
 
 ## Features
 
-* Monitor a wide range of environmental variables (temperature, humidity, PM 2.5, TVOC, light, pressure, etc).
+* Monitor a wide range of environmental variables (temperature, humidity, PM 2.5, TVOC, CO2, light, pressure, etc).
 * Display key values on an eInk screen.
 * Offer a webservice to pull sensor and system data.
 * Broadcast all available sensor data via MQTT.
