@@ -30,7 +30,7 @@ class MQTTHandler:
         print(f'Published to {topic} with PID {pid}')
 
     def message(client, topic, message):
-        # Method callled when a client's subscribed feed has a new value.
+        # Method called when a client's subscribed feed has a new value.
         print(f'New message on topic {topic}: {message}')
 
     def __init__(self, broker, port, username, password):
