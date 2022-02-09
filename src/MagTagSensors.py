@@ -38,7 +38,7 @@ class MagTagSensors:
     HTTP_PORT = 80
 
     # MQTT
-    MQTT_REFRESH_RATE = 30
+    MQTT_REFRESH_RATE = 60
     MQTT_TOPIC = 'magtag_sensors'
 
     def __init__(self):
