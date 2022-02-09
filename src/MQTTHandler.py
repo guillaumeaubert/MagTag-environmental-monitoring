@@ -10,7 +10,7 @@ class MQTTHandler:
         # This function will be called when the mqtt_client is connected
         # successfully to the broker.
         print("Connected to MQTT Broker!")
-        print(f'Flags: {flags}\n RC: {rc}')
+        print(f'Flags: {flags}; RC: {rc}')
 
     def disconnect(self, mqtt_client, userdata, rc):
         # This method is called when the mqtt_client disconnects

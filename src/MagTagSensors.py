@@ -105,6 +105,7 @@ class MagTagSensors:
         print("Running loop")
         time_until_mqtt_refresh = 0
         time_until_display_refresh = 0
+        mqtt_force_reconnect = False
         while True:
             time_until_display_refresh -= MagTagSensors.LOOP_CYCLE_RATE
             time_until_mqtt_refresh -= MagTagSensors.LOOP_CYCLE_RATE
@@ -120,9 +121,10 @@ class MagTagSensors:
             # Every MQTT_REFRESH_RATE, send an update to the broker
             if time_until_mqtt_refresh <= 0:
                 time_until_mqtt_refresh = MagTagSensors.MQTT_REFRESH_RATE
-                if (mqtt_client.is_connected() is False):
+                if (mqtt_force_reconnect or mqtt_client.is_connected() is False):
                     try:
-                        mqtt_client.connect()
+                        mqtt_client.reconnect()
+                        mqtt_force_reconnect = False
                     except:
                         print('Failed to reconnect to MQTT broker')
 
@@ -140,6 +142,9 @@ class MagTagSensors:
                     print('Published to MQTT broker')
                 except Exception as exception:
                     print(f'Failed to publish to MQTT broker: {exception}')
+                    # Try to publish again next cycle
+                    time_until_mqtt_refresh = 0
+                    mqtt_force_reconnect = True
 
             # Every DISPLAY_REFRESH_RATE or whenever button A is pressed, refresh the
             # MagTag display
