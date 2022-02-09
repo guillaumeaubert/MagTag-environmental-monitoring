@@ -1,5 +1,8 @@
 # MagTag: Environmental Monitoring
 
+![MagTag picture](magtag_picture.jpg?raw=true)
+
+
 ## Features
 
 * Monitor a wide range of environmental variables (temperature, humidity, PM 2.5, TVOC, light, pressure, etc).
