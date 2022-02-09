@@ -21,6 +21,25 @@
 * [STEMMA QT / Qwiic JST SH 4-Pin Cable](https://www.adafruit.com/product/4399)
 
 
+## Structure for secrets.py
+
+```
+secrets = {
+    'wifi': {
+        'ssid' : '...',
+        'password' : '...',
+    },
+    'timezone' : "America/Los_Angeles", # http://worldtimeapi.org/timezones
+    'mqtt': {
+        'broker' : '...',
+        'port': 1883,
+        'username' : '...',
+        'password' : '...',
+    },
+}
+```
+
+
 ## References
 
 * MagTag
