@@ -44,7 +44,7 @@ class MagTagSensors:
     def __init__(self):
         # Connect to WiFi
         secrets = Utils.get_secrets()
-        Utils.connect_to_wifi(secrets["ssid"], secrets["password"])
+        Utils.connect_to_wifi(secrets['wifi']['ssid'], secrets['wifi']['password'])
         socket = Utils.get_socket(MagTagSensors.HTTP_INTERFACE, MagTagSensors.HTTP_PORT)
 
         # Set up sensors
