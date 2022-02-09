@@ -1,4 +1,4 @@
-# MagTag: Environmental Sensors
+# MagTag: Environmental Monitoring
 
 ## Features
 
