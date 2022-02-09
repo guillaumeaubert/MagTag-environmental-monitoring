@@ -1,5 +1,23 @@
 # MagTag: Environmental Sensors
 
+## Features
+
+* Monitor a wide range of environmental variables (temperature, humidity, PM 2.5, TVOC, light, pressure, etc).
+* Display key values on an eInk screen.
+* Offer a webservice to pull sensor and system data.
+* Broadcast all available sensor data via MQTT.
+
+
+## Bill of Materials
+
+* [Adafruit MagTag - 2.9" Grayscale E-Ink WiFi Display](https://www.adafruit.com/product/4800)
+* [Adafruit SCD-40 - True CO2, Temperature and Humidity Sensor - STEMMA QT / Qwiic](https://www.adafruit.com/product/5187)
+* [Adafruit TMP117 ±0.1°C High Accuracy I2C Temperature Sensor - STEMMA QT / Qwiic](https://www.adafruit.com/product/4821)
+* [Adafruit BME680 - Temperature, Humidity, Pressure and Gas Sensor - STEMMA QT](https://www.adafruit.com/product/3660)
+* [Adafruit PMSA003I Air Quality Breakout - STEMMA QT / Qwiic](https://www.adafruit.com/product/4632)
+* [STEMMA QT / Qwiic JST SH 4-Pin Cable](https://www.adafruit.com/product/4399)
+
+
 ## References
 
 * MagTag
