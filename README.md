@@ -40,6 +40,85 @@ secrets = {
 ```
 
 
+## Pulling values in Home Assistant
+
+In `/config/configuration.yaml`:
+
+```
+sensor:
+  - platform: mqtt
+    state_topic: 'magtag_sensors'
+    name: 'CO2'
+    unit_of_measurement: 'ppm'
+    value_template: "{{ value_json.SCD40.co2 }}"
+  - platform: mqtt
+    state_topic: 'magtag_sensors'
+    name: 'MagTag TVOC AQI'
+    unit_of_measurement: 'AQI'
+    value_template: "{{ value_json.BME680.AQI.TVOC_AQI }}"
+  - platform: mqtt
+    state_topic: 'magtag_sensors'
+    name: 'MagTag Temperature'
+    unit_of_measurement: '°C'
+    value_template: "{{ value_json.TMP117.temperature }}"
+  - platform: mqtt
+    state_topic: 'magtag_sensors'
+    name: 'MagTag PM 2.5 AQI'
+    unit_of_measurement: 'AQI'
+    value_template: "{{ value_json.PMSA003I.AQI['PM_2.5'] }}"
+  - platform: mqtt
+    state_topic: 'magtag_sensors'
+    name: 'MagTag PM 10 AQI'
+    unit_of_measurement: 'AQI'
+    value_template: "{{ value_json.PMSA003I.AQI.PM_10 }}"
+  - platform: mqtt
+    state_topic: 'magtag_sensors'
+    name: 'MagTag Light'
+    unit_of_measurement: ''
+    value_template: "{{ value_json.magtag.light }}"
+  - platform: mqtt
+    state_topic: 'magtag_sensors'
+    name: 'MagTag Humidity'
+    unit_of_measurement: '% RH'
+    value_template: "{{ value_json.BME680.humidity }}"
+  - platform: mqtt
+    state_topic: 'magtag_sensors'
+    name: 'MagTag Pressure'
+    unit_of_measurement: 'hPa'
+    value_template: "{{ value_json.BME680.pressure }}"
+  - platform: mqtt
+    state_topic: 'magtag_sensors'
+    name: 'MagTag 5um Particles'
+    unit_of_measurement: 'per 0.1l'
+    value_template: "{{ value_json.PMSA003I.particles_count['5.0um_per_0.1l'] }}"
+  - platform: mqtt
+    state_topic: 'magtag_sensors'
+    name: 'MagTag 10um Particles'
+    unit_of_measurement: 'per 0.1l'
+    value_template: "{{ value_json.PMSA003I.particles_count['10um_per_0.1l'] }}"
+  - platform: mqtt
+    state_topic: 'magtag_sensors'
+    name: 'MagTag 0.5um Particles'
+    unit_of_measurement: 'per 0.1l'
+    value_template: "{{ value_json.PMSA003I.particles_count['0.5um_per_0.1l'] }}"
+  - platform: mqtt
+    state_topic: 'magtag_sensors'
+    name: 'MagTag 1um Particles'
+    unit_of_measurement: 'per 0.1l'
+    value_template: "{{ value_json.PMSA003I.particles_count['1.0um_per_0.1l'] }}"
+  - platform: mqtt
+    state_topic: 'magtag_sensors'
+    name: 'MagTag 0.3um Particles'
+    unit_of_measurement: 'per 0.1l'
+    value_template: "{{ value_json.PMSA003I.particles_count['0.3um_per_0.1l'] }}"
+  - platform: mqtt
+    state_topic: 'magtag_sensors'
+    name: 'MagTag 2.5um Particles'
+    unit_of_measurement: 'per 0.1l'
+    value_template: "{{ value_json.PMSA003I.particles_count['2.5um_per_0.1l'] }}"
+```
+
+
 ## References
 
 * MagTag
