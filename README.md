@@ -40,6 +40,17 @@ secrets = {
 ```
 
 
+## Home Assistant graph examples
+
+Pressure:
+
+![Home Assistant pressure graph example](home_assistant_pressure_example.png?raw=true)
+
+Temperature, with outdoors temperature provided by the National Weather Service:
+
+![Home Assistant temperature graph example](home_assistant_temperature_example.png?raw=true)
+
+
 ## Pulling values in Home Assistant
 
 In `/config/configuration.yaml`:
